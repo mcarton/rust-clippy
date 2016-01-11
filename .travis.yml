@@ -2,6 +2,25 @@ language: rust
 rust: nightly
 sudo: false
 
+addons:
+    apt:
+        packages:
+            # for kcov:
+            - binutils-dev
+            - libcurl4-openssl-dev
+            - libdw-dev
+            - libelf-dev
+
 script:
  - python util/update_lints.py -c
  - cargo test --features debugging
+
+after_success: |
+    pip install 'travis-cargo' --user &&
+    export PATH=$HOME/.local/bin:$PATH &&
+    export LD_LIBRARY_PATH=target/debug/:$LD_LIBRARY_PATH &&
+    travis-cargo coveralls --no-sudo --verify
+
+env:
+    global:
+        - TRAVIS_CARGO_NIGHTLY_FEATURE=""
