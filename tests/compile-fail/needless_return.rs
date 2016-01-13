@@ -18,7 +18,7 @@ fn test_no_semicolon() -> bool {
     return true
     //~^ ERROR unneeded return statement
     //~| HELP remove `return` as shown
-    //~| SUGGESTION true
+    //~| SUGGESTION this does break the test as expected
 }
 
 fn test_if_block() -> bool {
