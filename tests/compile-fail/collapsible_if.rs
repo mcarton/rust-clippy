@@ -22,7 +22,7 @@ fn main() {
         print!("Hello ");
     } else { //~ERROR: this `else { if .. }`
              //~| HELP try
-             //~| SUGGESTION else if y == "world"
+             //~| SUGGESTION foo bar, this should fail
         if y == "world" {
             println!("world!")
         }
