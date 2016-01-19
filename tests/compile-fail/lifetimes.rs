@@ -1,8 +1,8 @@
 #![feature(plugin)]
 #![plugin(clippy)]
 
-#![deny(needless_lifetimes)]
-#![allow(dead_code, unused_lifetimes)]
+#![deny(needless_lifetimes, unused_lifetimes)]
+#![allow(dead_code)]
 fn distinct_lifetimes<'a, 'b>(_x: &'a u8, _y: &'b u8, _z: u8) { }
 //~^ERROR explicit lifetimes given
 
@@ -118,6 +118,10 @@ fn alias_with_lt3<'a>(_foo: &FooAlias<'a> ) -> &'a str { unimplemented!() }
 
 // no warning, two input lifetimes
 fn alias_with_lt4<'a, 'b>(_foo: &'a FooAlias<'b> ) -> &'a str { unimplemented!() }
+
+fn named_input_elided_output<'a>(_arg: &'a str) -> &str { unimplemented!() } //~ERROR explicit lifetimes given
+
+fn elided_input_named_output<'a>(_arg: &str) -> &'a str { unimplemented!() }
 
 fn main() {
 }

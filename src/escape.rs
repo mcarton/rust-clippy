@@ -31,6 +31,13 @@ pub struct EscapePass;
 /// ```
 declare_lint!(pub BOXED_LOCAL, Warn, "using Box<T> where unnecessary");
 
+fn is_box(ty: ty::Ty) -> bool {
+    match ty.sty {
+        ty::TyBox(..) => true,
+        _ => false
+    }
+}
+
 struct EscapeDelegate<'a, 'tcx: 'a> {
     cx: &'a LateContext<'a, 'tcx>,
     set: NodeSet,
@@ -45,7 +52,7 @@ impl LintPass for EscapePass {
 impl LateLintPass for EscapePass {
     fn check_fn(&mut self, cx: &LateContext, _: visit::FnKind, decl: &FnDecl, body: &Block, _: Span, id: NodeId) {
         let param_env = ty::ParameterEnvironment::for_item(cx.tcx, id);
-        let infcx = infer::new_infer_ctxt(cx.tcx, &cx.tcx.tables, Some(param_env), false);
+        let infcx = infer::new_infer_ctxt(cx.tcx, &cx.tcx.tables, Some(param_env));
         let mut v = EscapeDelegate {
             cx: cx,
             set: NodeSet(),
@@ -77,6 +84,12 @@ impl<'a, 'tcx: 'a> Delegate<'tcx> for EscapeDelegate<'a, 'tcx> {
     }
     fn matched_pat(&mut self, _: &Pat, _: cmt<'tcx>, _: MatchMode) {}
     fn consume_pat(&mut self, consume_pat: &Pat, cmt: cmt<'tcx>, _: ConsumeMode) {
+        if self.cx.tcx.map.is_argument(consume_pat.id) {
+            if is_box(cmt.ty) {
+                self.set.insert(consume_pat.id);
+            }
+            return;
+        }
         if let Categorization::Rvalue(..) = cmt.cat {
             if let Some(Node::NodeStmt(st)) = self.cx
                                                   .tcx
@@ -86,7 +99,7 @@ impl<'a, 'tcx: 'a> Delegate<'tcx> for EscapeDelegate<'a, 'tcx> {
                     if let DeclLocal(ref loc) = decl.node {
                         if let Some(ref ex) = loc.init {
                             if let ExprBox(..) = ex.node {
-                                if let ty::TyBox(..) = cmt.ty.sty {
+                                if is_box(cmt.ty) {
                                     // let x = box (...)
                                     self.set.insert(consume_pat.id);
                                 }
