@@ -20,7 +20,7 @@ fn main() {
     // Collaspe `else { if .. }` to `else if ..`
     if x == "hello" {
         print!("Hello ");
-    } else { //~ERROR: this `else { if .. }`
+    } else { //~ERROR this `else { if .. }`
              //~| HELP try
              //~| SUGGESTION foo bar, this should fail
         if y == "world" {
